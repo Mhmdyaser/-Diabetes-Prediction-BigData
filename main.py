@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from functools import reduce
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
@@ -20,6 +21,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, r
 # 1. Load Data
 print("--- Data Loading ---")
 df = pd.read_csv('diabetes_prediction_dataset.csv')
+
 print(df.head())
 
 # 2. Data Exploration
@@ -110,4 +112,44 @@ df[numeric_columns] = scale.fit_transform(df[numeric_columns])
 print("\nFinal Data Info after Preprocessing:")
 df.info()
 print("\nSample of processed data:\n", df.head())
+
+# ========================================================
+# MapReduce (Big Data Simulation)
+# ========================================================
+print("\n" + "="*50)
+print("--- Starting Hadoop-style MapReduce Simulation ---")
+print("="*50)
+
+# 1. (Splitting)
+data_chunks = [df[i:i+25000] for i in range(0, 100000, 25000)]
+
+# 2. Mapper
+def mapper(chunk):
+    
+    return chunk['diabetes'].value_counts().to_dict()
+
+print("\n[Phase 1]: Mapping data on 4 virtual nodes...")
+mapped_results = list(map(mapper, data_chunks))
+for i, res in enumerate(mapped_results):
+    print(f" > Node {i+1} Result: {res}")
+
+# 3. Shuffle & Sort
+print("\n[Phase 2]: Shuffling and Sorting data...")
+shuffled_data = {}
+for res in mapped_results:
+    for key, value in res.items():
+        shuffled_data.setdefault(key, []).append(value)
+
+# 4. Reducer
+print("[Phase 3]: Reducing results to final count...")
+final_mapreduce_output = {key: sum(values) for key, values in shuffled_data.items()}
+
+print("\n--- MapReduce Final Output ---")
+print(f"Total Diabetes Stats: {final_mapreduce_output}")
+print("="*50 + "\n")
+# ========================================================
+# MapReduce 
+# ========================================================
+
+
 print("\n--- Project Execution Finished ---")
